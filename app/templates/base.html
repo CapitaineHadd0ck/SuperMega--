@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{% block title %}SuperMega++{% endblock %}</title>
+	<!-- Local Bootstrap CSS -->
+	<link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+	<!-- Favicon -->
+	<link rel="icon" type="image/svg+xml" sizes="any"
+		href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚧</text></svg>" />
+</head>
+
+<body>
+	<!-- Navigation Bar -->
+	<nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="--bs-navbar-padding-x: 1rem">
+		<a class="navbar-brand" href="{{ url_for('main.index') }}">SuperMega++</a>
+		<ul class="navbar-nav">
+			<li class="nav-item">
+				<a class="nav-link{% if request.endpoint == 'main.index' %} active{% endif %}"
+					href="{{ url_for('main.index') }}">Home</a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link {% if request.endpoint == 'main.project' %}active{% endif %}{% if 'project_data' not in session %}disabled{% endif %}"
+					href="{{ url_for('main.project') }}">Project</a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link disabled" href="#">Contact</a>
+			</li>
+		</ul>
+	</nav>
+
+	<!-- Flash Messages Section -->
+	{% with messages = get_flashed_messages(with_categories=True) %}
+	{% if messages %}
+	<div class="container mt-3">
+		{% for category, message in messages %}
+		<div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+			{{ message }}
+			<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+		</div>
+		{% endfor %}
+	</div>
+	{% endif %}
+	{% endwith %}
+
+	<div class="container mt-5">
+		{% block content %}{% endblock %}
+	</div>
+
+	<!-- Local Bootstrap JS -->
+	<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+</body>
+
+</html>

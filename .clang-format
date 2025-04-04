@@ -1,0 +1,28 @@
+Language: Python
+
+# Indentation
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ContinuationIndentWidth: 4
+
+# Spaces
+SpaceBeforeAssignmentOperators: true
+
+# Braces
+BreakBeforeBraces: Allman
+
+# Align consecutive assignments
+AlignConsecutiveAssignments: true
+
+# Align consecutive declarations
+AlignConsecutiveDeclarations: true
+
+# Align operands of ternary operator
+AlignOperands: true
+
+# Align trailing comments
+AlignTrailingComments: true
+
+# Maximum number of consecutive line breaks before a newline is inserted
+MaxEmptyLinesToKeep: 1
