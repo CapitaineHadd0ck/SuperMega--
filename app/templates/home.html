@@ -22,11 +22,11 @@
 							<h6 class="mb-1">{{ project }}</h6>
 						</div>
 						<div class="btn-group" role="group">
-							<a href="{{ url_for('project_api.get_project', filename=project) }}"
+							<a href="{{ url_for('project_api.open_project', project_name=project) }}"
 								class="btn btn-primary btn-sm">Open</a>
-							<a href="{{ url_for('project_api.download_project', filename=project) }}"
+							<a href="{{ url_for('project_api.download_project', project_name=project) }}"
 								class="btn btn-secondary btn-sm">Download</a>
-							<a href="{{ url_for('project_api.delete_project', filename=project) }}"
+							<a href="{{ url_for('project_api.delete_project', project_name=project) }}"
 								class="btn btn-danger btn-sm delete-project">Delete</a>
 						</div>
 					</div>
@@ -47,14 +47,17 @@
 				<h5>Import Project</h5>
 			</div>
 			<div class="card-body">
-				<form action="{{ url_for('project_api.import_project') }}" method="POST" enctype="multipart/form-data">
+				<form action="{{ url_for('project_api.import_project') }}" method="POST" enctype="multipart/form-data"
+					id="folderUploadForm">
 					<div class="mb-3">
 						<label for="projectFolder" class="form-label">Select a project folder</label>
 						<input class="form-control" type="file" id="projectFolder" name="folder" webkitdirectory
 							directory multiple>
-						<div class="form-text">Please select a folder containing a "project.json" file.</div>
+						<div class="form-text">Please select a folder containing a "project.json" file and .c files.
+						</div>
 					</div>
-					<button type="submit" class="btn btn-primary">Import Project</button>
+					<input type="hidden" id="folderNameInput" name="folder_name" value="">
+					<button type="submit" class="btn btn-primary" id="importFolderBtn">Import Project</button>
 				</form>
 			</div>
 		</div>
@@ -112,6 +115,7 @@
 <script>
 	// Set up delete confirmation modal
 	document.addEventListener('DOMContentLoaded', function () {
+		// Delete confirmation setup
 		const deleteLinks = document.querySelectorAll('.delete-project');
 		const confirmDeleteButton = document.getElementById('confirmDeleteButton');
 
@@ -123,6 +127,21 @@
 				const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
 				modal.show();
 			});
+		});
+
+		// Folder upload handling - extract folder name
+		const folderInput = document.getElementById('projectFolder');
+		const folderNameInput = document.getElementById('folderNameInput');
+		const folderUploadForm = document.getElementById('folderUploadForm');
+
+		folderInput.addEventListener('change', function () {
+			if (this.files && this.files.length > 0) {
+				// Extract folder name from the path of the first file
+				// Example: /path/to/folder/file.txt -> folder
+				const firstFilePath = this.files[0].webkitRelativePath;
+				const folderName = firstFilePath.split('/')[0];
+				folderNameInput.value = folderName;
+			}
 		});
 	});
 </script>

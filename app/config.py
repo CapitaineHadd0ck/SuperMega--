@@ -12,11 +12,11 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-to-change')
 
     # File upload settings
-    ALLOWED_EXTENSIONS = {'json'}
-    MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB max file size
+    ALLOWED_EXTENSIONS = {'json', 'c'}
+    MAX_CONTENT_LENGTH = 10 * 1024 * 1024  # 10MB max file size
 
-    # Saved projects settings
-    PROJECT_FILES_DIR = os.path.join(BASE_DIR, '../projects')
+    # Projects base directory - where project folders will be stored
+    PROJECTS_BASE_DIR = os.path.join(BASE_DIR, '../projects')
 
 class DevelopmentConfig(Config):
     """Development configuration"""
@@ -27,7 +27,7 @@ class TestingConfig(Config):
     TESTING = True
     DEBUG = True
     WTF_CSRF_ENABLED = False
-    PROJECT_FILES_DIR = os.path.join(BASE_DIR, '../test_projects')
+    PROJECTS_BASE_DIR = os.path.join(BASE_DIR, '../test_projects')
 
 class ProductionConfig(Config):
     """Production configuration"""

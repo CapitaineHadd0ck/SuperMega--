@@ -21,7 +21,7 @@ def create_app(config_class='app.config'):
     app.secret_key = app.config.get('SECRET_KEY')
 
     # Create folders if they don't exist
-    os.makedirs(app.config['PROJECT_FILES_DIR'], exist_ok=True)
+    os.makedirs(app.config['PROJECTS_BASE_DIR'], exist_ok=True)
 
     # Register error handlers
     from app.utils.error_handlers import register_error_handlers
