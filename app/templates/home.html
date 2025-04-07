@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Projects - SuperMega++{% endblock %}
+
+{% block content %}
+<div class="row">
+	<div class="col-md-8">
+		<div class="card">
+			<div class="card-header d-flex justify-content-between align-items-center">
+				<h5>Projects</h5>
+				<button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#newProjectModal">
+					<i class="bi bi-plus"></i> New Project
+				</button>
+			</div>
+			<div class="card-body">
+				{% if projects %}
+				<div class="list-group">
+					{% for project in projects %}
+					<div
+						class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+						<div>
+							<h6 class="mb-1">{{ project }}</h6>
+						</div>
+						<div class="btn-group" role="group">
+							<a href="{{ url_for('project_api.get_project', filename=project) }}"
+								class="btn btn-primary btn-sm">Open</a>
+							<a href="{{ url_for('project_api.download_project', filename=project) }}"
+								class="btn btn-secondary btn-sm">Download</a>
+							<a href="{{ url_for('project_api.delete_project', filename=project) }}"
+								class="btn btn-danger btn-sm delete-project">Delete</a>
+						</div>
+					</div>
+					{% endfor %}
+				</div>
+				{% else %}
+				<div class="alert alert-info" role="alert">
+					No projects found. Create a new project or import one.
+				</div>
+				{% endif %}
+			</div>
+		</div>
+	</div>
+
+	<div class="col-md-4">
+		<div class="card">
+			<div class="card-header">
+				<h5>Import Project</h5>
+			</div>
+			<div class="card-body">
+				<form action="{{ url_for('project_api.import_project') }}" method="POST" enctype="multipart/form-data">
+					<div class="mb-3">
+						<label for="projectFolder" class="form-label">Select a project folder</label>
+						<input class="form-control" type="file" id="projectFolder" name="folder" webkitdirectory
+							directory multiple>
+						<div class="form-text">Please select a folder containing a "project.json" file.</div>
+					</div>
+					<button type="submit" class="btn btn-primary">Import Project</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Bootstrap Modal for New Project -->
+<div class="modal fade" id="newProjectModal" tabindex="-1" aria-labelledby="newProjectModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="newProjectModalLabel">Create New Project</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<form action="{{ url_for('project_api.create_project') }}" method="POST">
+					<div class="mb-3">
+						<label for="projectName" class="form-label">Project Name</label>
+						<input type="text" class="form-control" id="projectName" name="project_name" required>
+					</div>
+					<div class="mb-3">
+						<label for="projectComment" class="form-label">Project Comment</label>
+						<textarea class="form-control" id="projectComment" name="project_comment"></textarea>
+					</div>
+					<button type="submit" class="btn btn-success">Create Project</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- Modal confirmation for delete actions -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel"
+	aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="confirmDeleteModalLabel">Confirm Delete</h5>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				Are you sure you want to delete this project? This action cannot be undone.
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+				<a href="#" class="btn btn-danger" id="confirmDeleteButton">Delete</a>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Delete confirmation script -->
+<script>
+	// Set up delete confirmation modal
+	document.addEventListener('DOMContentLoaded', function () {
+		const deleteLinks = document.querySelectorAll('.delete-project');
+		const confirmDeleteButton = document.getElementById('confirmDeleteButton');
+
+		deleteLinks.forEach(function (link) {
+			link.addEventListener('click', function (e) {
+				e.preventDefault();
+				const deleteUrl = this.getAttribute('href');
+				confirmDeleteButton.setAttribute('href', deleteUrl);
+				const modal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+				modal.show();
+			});
+		});
+	});
+</script>
+{% endblock %}

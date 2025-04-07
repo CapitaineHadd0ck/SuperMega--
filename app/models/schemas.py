@@ -1,3 +1,5 @@
+"""JSON schemas for the application."""
+
 PROJECT_JSON_SCHEMA = {
     "type": "object",
     "properties": {

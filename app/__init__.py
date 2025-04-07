@@ -20,13 +20,18 @@ def create_app(config_class='app.config'):
     # Set a secret key for session management
     app.secret_key = app.config.get('SECRET_KEY')
 
-    # Create folders if don't exist
-    os.makedirs(app.config['PROJECTS_DIR'], exist_ok=True)
+    # Create folders if they don't exist
+    os.makedirs(app.config['PROJECT_FILES_DIR'], exist_ok=True)
+
+    # Register error handlers
+    from app.utils.error_handlers import register_error_handlers
+    register_error_handlers(app)
 
     # Register blueprints
-    from app.routes import main_bp
-    app.register_blueprint(main_bp)
-    from app.api_project import api_bp
-    app.register_blueprint(api_bp)
+    from app.blueprints.main import main
+    app.register_blueprint(main)
+
+    from app.blueprints.project_api import project_api
+    app.register_blueprint(project_api)
 
     return app

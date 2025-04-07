@@ -160,4 +160,5 @@ venv.bak/
 Thumbs.db
 ehthumbs.db
 
-app/projects/
+projects/
+test_projects/

@@ -7,6 +7,11 @@
 	<title>{% block title %}SuperMega++{% endblock %}</title>
 	<!-- Local Bootstrap CSS -->
 	<link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+	<!-- Custom CSS -->
+	{% block extra_css %}{% endblock %}
+	<!-- Security Headers -->
+	<meta http-equiv="X-Content-Type-Options" content="nosniff">
+	<meta http-equiv="X-Frame-Options" content="DENY">
 	<!-- Favicon -->
 	<link rel="icon" type="image/svg+xml" sizes="any"
 		href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚧</text></svg>" />
@@ -15,18 +20,18 @@
 <body>
 	<!-- Navigation Bar -->
 	<nav class="navbar navbar-expand-lg navbar-dark bg-dark" style="--bs-navbar-padding-x: 1rem">
-		<a class="navbar-brand" href="{{ url_for('main.index') }}">SuperMega++</a>
+		<a class="navbar-brand" href="{{ url_for('main.home') }}">SuperMega++</a>
 		<ul class="navbar-nav">
 			<li class="nav-item">
-				<a class="nav-link{% if request.endpoint == 'main.index' %} active{% endif %}"
-					href="{{ url_for('main.index') }}">Home</a>
+				<a class="nav-link{% if request.endpoint == 'main.home' %} active{% endif %}"
+					href="{{ url_for('main.home') }}">Home</a>
 			</li>
 			<li class="nav-item">
-				<a class="nav-link {% if request.endpoint == 'main.project' %}active{% endif %}{% if 'project_data' not in session %}disabled{% endif %}"
-					href="{{ url_for('main.project') }}">Project</a>
+				<a class="nav-link{% if request.endpoint == 'main.project_details' %} active{% endif %}{% if 'project_data' not in session %} disabled{% endif %}"
+					href="{{ url_for('main.project_details') }}">Project</a>
 			</li>
 			<li class="nav-item">
-				<a class="nav-link disabled" href="#">Contact</a>
+				<a class="nav-link disabled" href="#">About</a>
 			</li>
 		</ul>
 	</nav>
@@ -45,12 +50,15 @@
 	{% endif %}
 	{% endwith %}
 
-	<div class="container mt-5">
+	<div class="container mt-4">
 		{% block content %}{% endblock %}
 	</div>
 
 	<!-- Local Bootstrap JS -->
 	<script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+
+	<!-- Extra JS -->
+	{% block extra_js %}{% endblock %}
 </body>
 
 </html>
