@@ -11,16 +11,98 @@
 		margin-bottom: 20px;
 	}
 
-	.console-output {
-		background-color: #212529;
-		color: #fff;
-		font-family: monospace;
-		padding: 10px;
-		border-radius: 5px;
-		height: 200px;
+	.file-explorer {
+		max-height: 600px;
 		overflow-y: auto;
 	}
+
+	.file-list-item {
+		cursor: pointer;
+		padding: 8px 12px;
+		border-radius: 4px;
+	}
+
+	.file-list-item:hover {
+		background-color: #f8f9fa;
+	}
+
+	.file-list-item.active {
+		background-color: #007bff;
+		color: white;
+	}
+
+	.code-container {
+		position: relative;
+		height: 500px;
+		overflow: auto;
+		border: 1px solid #dee2e6;
+		border-radius: 0.25rem;
+	}
+
+	.code-content {
+		font-family: monospace;
+		padding: 1rem;
+		min-height: 100%;
+		margin: 0;
+	}
+
+	/* Syntax highlighting styles for light mode */
+	.hljs-keyword {
+		color: #0000ff;
+	}
+
+	.hljs-comment {
+		color: #008000;
+	}
+
+	.hljs-string {
+		color: #a31515;
+	}
+
+	.hljs-number {
+		color: #098658;
+	}
+
+	.hljs-function {
+		color: #795E26;
+	}
+
+	.hljs-preprocessor {
+		color: #800080;
+	}
+
+	/* Syntax highlighting styles for dark mode */
+	.dark-mode .code-container {
+		background-color: #1e1e1e;
+		color: #d4d4d4;
+	}
+
+	.dark-mode .hljs-keyword {
+		color: #569CD6;
+	}
+
+	.dark-mode .hljs-comment {
+		color: #6A9955;
+	}
+
+	.dark-mode .hljs-string {
+		color: #CE9178;
+	}
+
+	.dark-mode .hljs-number {
+		color: #B5CEA8;
+	}
+
+	.dark-mode .hljs-function {
+		color: #DCDCAA;
+	}
+
+	.dark-mode .hljs-preprocessor {
+		color: #C586C0;
+	}
 </style>
+<!-- Highlight.js for syntax highlighting -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
 {% endblock %}
 
 {% block content %}
@@ -28,66 +110,104 @@
 	<div class="d-flex justify-content-between align-items-center">
 		<h1>{{ data.project_name }}</h1>
 		<div>
-			<button class="btn btn-primary">Save</button>
-			<button class="btn btn-success">Run</button>
+			<button class="btn btn-primary" id="saveProjectBtn">Save</button>
+			<button class="btn btn-success" id="runProjectBtn">Run</button>
 		</div>
 	</div>
 	{% if data.project_comment %}
 	<p class="text-muted">{{ data.project_comment }}</p>
 	{% endif %}
+
+	<div class="row mt-3">
+		<div class="col-md-3">
+			<div class="form-check form-switch">
+				<input class="form-check-input" type="checkbox" id="optimizationSwitch">
+				<label class="form-check-label" for="optimizationSwitch">Enable Optimization</label>
+			</div>
+		</div>
+		<div class="col-md-3">
+			<select class="form-select" id="targetPlatform">
+				<option selected>x86_64</option>
+				<option>ARM</option>
+				<option>RISC-V</option>
+			</select>
+		</div>
+		<div class="col-md-3">
+			<div class="form-check form-switch">
+				<input class="form-check-input" type="checkbox" id="debugSwitch" checked>
+				<label class="form-check-label" for="debugSwitch">Debug Mode</label>
+			</div>
+		</div>
+		<div class="col-md-3">
+			<button class="btn btn-outline-secondary" id="settingsBtn">Additional Settings</button>
+		</div>
+	</div>
 </div>
 
 <div class="row">
-	<div class="col-md-8">
+	<!-- File Explorer -->
+	<div class="col-md-3">
 		<div class="card mb-4">
-			<div class="card-header d-flex justify-content-between align-items-center">
-				<h5>C Source Code ({{ data.c_file_path }})</h5>
-				<div class="btn-group btn-group-sm">
-					<button class="btn btn-outline-secondary">Format</button>
-					<button class="btn btn-outline-secondary">Toggle Theme</button>
-				</div>
+			<div class="card-header">
+				<h5>Files</h5>
 			</div>
 			<div class="card-body p-0">
-				<!-- Code viewer will be inserted here -->
-				<textarea></textarea>
+				<div class="file-explorer" id="fileExplorer">
+					<!-- TODO populate files with jinja python -->
+				</div>
 			</div>
 		</div>
 	</div>
 
-	<div class="col-md-4">
+	<!-- File Content Viewer -->
+	<div class="col-md-9">
 		<div class="card mb-4">
-			<div class="card-header">
-				<h5>Project Details</h5>
-			</div>
-			<div class="card-body">
-				<ul class="list-group list-group-flush">
-					<li class="list-group-item">
-						<strong>Project Name:</strong> {{ data.project_name }}
-					</li>
-					<li class="list-group-item">
-						<strong>C File:</strong> {{ data.c_file_path }}
-					</li>
-					{% for key, value in data.items() %}
-					{% if key not in ['project_name', 'project_comment', 'c_file_path'] %}
-					<li class="list-group-item">
-						<strong>{{ key }}:</strong> {{ value }}
-					</li>
-					{% endif %}
-					{% endfor %}
-				</ul>
-			</div>
-		</div>
-
-		<div class="card">
-			<div class="card-header">
-				<h5>Console Output</h5>
+			<div class="card-header d-flex justify-content-between align-items-center">
+				<h5 id="currentFileName">{{ data.c_file_path }}</h5>
+				<div class="btn-group btn-group-sm">
+					<button class="btn btn-outline-secondary" id="toggleThemeBtn">Dark Mode</button>
+				</div>
 			</div>
 			<div class="card-body p-0">
-				<div class="console-output">
-					// Compilation and execution output will appear here
+				<div class="code-container" id="codeContainer">
+					<pre><code class="code-content language-c" id="fileContent"></code></pre>
 				</div>
 			</div>
 		</div>
 	</div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Highlight.js for syntax highlighting -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/c.min.js"></script>
+
+<script>
+	document.addEventListener('DOMContentLoaded', function () {
+		const fileContent = document.getElementById('fileContent');
+		const codeContainer = document.getElementById('codeContainer');
+
+		// Project directory handling
+		let isDarkMode = false;
+
+		// Toggle theme button
+		document.getElementById('toggleThemeBtn').addEventListener('click', function () {
+			isDarkMode = !isDarkMode;
+
+			if (isDarkMode) {
+				document.body.classList.add('dark-mode');
+				codeContainer.classList.add('bg-dark');
+				this.textContent = 'Light Mode';
+			} else {
+				document.body.classList.remove('dark-mode');
+				codeContainer.classList.remove('bg-dark');
+				this.textContent = 'Dark Mode';
+			}
+
+			// Re-highlight code with new theme
+			hljs.highlightElement(fileContent);
+		});
+	});
+</script>
 {% endblock %}
