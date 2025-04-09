@@ -153,7 +153,14 @@
 			</div>
 			<div class="card-body p-0">
 				<div class="file-explorer" id="fileExplorer">
-					<!-- TODO populate files with jinja python -->
+					<ul class="list-group list-group-flush">
+						{% for file in project_files %}
+						<li class="list-group-item file-list-item {% if file == default_file %}active{% endif %}"
+							data-filename="{{ file }}">
+							<i class="bi bi-file-earmark-text"></i> {{ file }}
+						</li>
+						{% endfor %}
+					</ul>
 				</div>
 			</div>
 		</div>
@@ -163,18 +170,25 @@
 	<div class="col-md-9">
 		<div class="card mb-4">
 			<div class="card-header d-flex justify-content-between align-items-center">
-				<h5 id="currentFileName">{{ data.c_file_path }}</h5>
+				<h5 id="currentFileName">{{ default_file }}</h5>
 				<div class="btn-group btn-group-sm">
 					<button class="btn btn-outline-secondary" id="toggleThemeBtn">Dark Mode</button>
 				</div>
 			</div>
 			<div class="card-body p-0">
 				<div class="code-container" id="codeContainer">
-					<pre><code class="code-content language-c" id="fileContent"></code></pre>
+					<pre><code class="code-content language-c" id="fileContent">{{ file_contents.get(default_file, '') }}</code></pre>
 				</div>
 			</div>
 		</div>
 	</div>
+</div>
+
+<!-- Hidden divs to store file contents -->
+<div style="display: none;" id="fileContentsData">
+	{% for filename, content in file_contents.items() %}
+	<div data-filename="{{ filename }}">{{ content }}</div>
+	{% endfor %}
 </div>
 {% endblock %}
 
@@ -182,13 +196,37 @@
 <!-- Highlight.js for syntax highlighting -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/c.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/json.min.js"></script>
 
 <script>
 	document.addEventListener('DOMContentLoaded', function () {
 		const fileContent = document.getElementById('fileContent');
+		const currentFileName = document.getElementById('currentFileName');
 		const codeContainer = document.getElementById('codeContainer');
+		const fileItems = document.querySelectorAll('.file-list-item');
+		const fileContentsData = document.getElementById('fileContentsData');
 
-		// Project directory handling
+		// Get content for a specific file from the hidden data
+		function getFileContent(filename) {
+			const fileDiv = fileContentsData.querySelector(`div[data-filename="${filename}"]`);
+			return fileDiv ? fileDiv.textContent : '';
+		}
+
+		// Determine language for syntax highlighting
+		function getLanguageForFile(filename) {
+			if (filename.endsWith('.json')) {
+				return 'json';
+			} else if (filename.endsWith('.c') || filename.endsWith('.h')) {
+				return 'c';
+			} else {
+				return 'plaintext';
+			}
+		}
+
+		// Initialize syntax highlighting
+		hljs.highlightElement(fileContent);
+
+		// Dark mode handling
 		let isDarkMode = false;
 
 		// Toggle theme button
@@ -207,6 +245,49 @@
 
 			// Re-highlight code with new theme
 			hljs.highlightElement(fileContent);
+		});
+
+		// File click handling
+		fileItems.forEach(function (item) {
+			item.addEventListener('click', function () {
+				// Remove active class from all items
+				fileItems.forEach(function (i) {
+					i.classList.remove('active');
+				});
+
+				// Add active class to clicked item
+				this.classList.add('active');
+
+				// Get the filename
+				const filename = this.getAttribute('data-filename');
+				currentFileName.textContent = filename;
+
+				// Get content from our hidden div
+				const content = getFileContent(filename);
+				fileContent.textContent = content;
+
+				// Update language for syntax highlighting
+				const language = getLanguageForFile(filename);
+				fileContent.className = `code-content language-${language}`;
+
+				// Re-highlight the code
+				hljs.highlightElement(fileContent);
+			});
+		});
+
+		// Mock functionality for the Save button
+		document.getElementById('saveProjectBtn').addEventListener('click', function () {
+			alert('Save functionality will be implemented in a future version.');
+		});
+
+		// Mock functionality for the Run button
+		document.getElementById('runProjectBtn').addEventListener('click', function () {
+			alert('Run functionality will be implemented in a future version.');
+		});
+
+		// Mock functionality for the Settings button
+		document.getElementById('settingsBtn').addEventListener('click', function () {
+			alert('Additional settings will be available in a future version.');
 		});
 	});
 </script>
