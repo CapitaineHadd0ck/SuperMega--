@@ -109,23 +109,23 @@ def download_project(project_name):
         flash(f"Error creating zip archive: {str(e)}", "danger")
         return redirect(url_for('main.home'))
 
-# NEW ROUTE: Update project fields
+# Update project fields
 @project_api.route('/update/<project_name>', methods=['POST'])
 def update_project_field(project_name):
     """Update a single field in the project data."""
     try:
-        # Get the JSON data from the request
-        data = request.get_json()
+        # Get the form data from the request instead of JSON
+        field = request.form.get('field')
+        value = request.form.get('value')
 
-        if not data or 'field' not in data or 'value' not in data:
-            return jsonify({'success': False, 'message': 'Invalid request data'}), 400
-
-        field = data['field']
-        value = data['value']
+        if not field or not value:
+            flash('Invalid request data', 'danger')
+            return redirect(url_for('main.project_details'))
 
         # Only allow updating specific fields
         if field not in ['project_name', 'project_comment']:
-            return jsonify({'success': False, 'message': 'Invalid field name'}), 400
+            flash('Invalid field name', 'danger')
+            return redirect(url_for('main.project_details'))
 
         # Update the project
         updated_data = ProjectService.update_project_field(project_name, field, value)
@@ -134,10 +134,11 @@ def update_project_field(project_name):
         if 'project_data' in session:
             session['project_data'] = updated_data
 
-        # Set flash message for the next page load
         flash(f"Project {field.replace('_', ' ')} updated successfully.", "success")
 
-        return jsonify({'success': True, 'data': updated_data})
+        # Return a redirect
+        return redirect(url_for('main.project_details'))
 
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
+        flash(str(e), "danger")
+        return redirect(url_for('main.project_details'))

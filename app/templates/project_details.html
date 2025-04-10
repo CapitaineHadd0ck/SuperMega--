@@ -384,71 +384,28 @@
 			// Get the current project
 			const projectName = "{{ session.get('current_project') }}";
 
-			// Send update to backend
-			fetch(`/api/projects/update/${projectName}`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					field: fieldName,
-					value: value
-				})
-			})
-				.then(response => response.json())
-				.then(data => {
-					if (data.success) {
-						// Update the field display
-						field.setAttribute('data-value', value);
+			// Create a form to submit
+			const form = document.createElement('form');
+			form.method = 'POST';
+			form.action = `/api/projects/update/${projectName}`;
 
-						if (fieldName === 'project_name') {
-							field.innerHTML = `${value}<i class="bi bi-pencil-square edit-icon"></i>`;
-							// Update page title
-							document.title = `${value} - SuperMega++`;
-						} else {
-							// For project comment
-							if (value) {
-								field.innerHTML = `<p class="text-muted">${value}</p><i class="bi bi-pencil-square edit-icon"></i>`;
-							} else {
-								field.innerHTML = `<p class="text-muted fst-italic">Add a project comment...</p><i class="bi bi-pencil-square edit-icon"></i>`;
-							}
-						}
+			// Create the field input
+			const fieldInput = document.createElement('input');
+			fieldInput.type = 'hidden';
+			fieldInput.name = 'field';
+			fieldInput.value = fieldName;
+			form.appendChild(fieldInput);
 
-						// If project.json is currently displayed, update its content in the hidden div and in the view
-						if (currentFileName.textContent === 'project.json') {
-							// Get the current project data from storage
-							const jsonContent = getFileContent('project.json');
-							if (jsonContent) {
-								try {
-									const projectData = JSON.parse(jsonContent);
-									projectData[fieldName] = value;
+			// Create the value input
+			const valueInput = document.createElement('input');
+			valueInput.type = 'hidden';
+			valueInput.name = 'value';
+			valueInput.value = value;
+			form.appendChild(valueInput);
 
-									// Update hidden div
-									const updatedContent = JSON.stringify(projectData, null, 2);
-									const fileDiv = fileContentsData.querySelector('div[data-filename="project.json"]');
-									if (fileDiv) {
-										fileDiv.textContent = updatedContent;
-									}
-
-									// Update visible content if project.json is currently displayed
-									fileContent.textContent = updatedContent;
-
-									// Re-highlight for syntax
-									hljs.highlightElement(fileContent);
-								} catch (e) {
-									console.error("Error parsing JSON:", e);
-								}
-							}
-						}
-					} else {
-						// Show error in console
-						console.error("Error updating field:", data.message);
-						// Could add an alert here if needed
-					}
-				})
-				.catch(error => {
-					console.error('Error:', error);
-				});
+			// Submit the form
+			document.body.appendChild(form);
+			form.submit();
 		}
 
 		// Add click event to all editable fields
