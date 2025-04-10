@@ -46,6 +46,31 @@
 		margin: 0;
 	}
 
+	/* Editable fields styling */
+	.editable-field {
+		display: inline-block;
+		position: relative;
+		cursor: pointer;
+	}
+
+	.editable-field:hover .edit-icon {
+		visibility: visible;
+	}
+
+	.edit-icon {
+		visibility: hidden;
+		margin-left: 8px;
+		color: #6c757d;
+		cursor: pointer;
+	}
+
+	.editable-input {
+		width: 100%;
+		padding: 5px;
+		border: 1px solid #ced4da;
+		border-radius: 4px;
+	}
+
 	/* Syntax highlighting styles for light mode */
 	.hljs-keyword {
 		color: #0000ff;
@@ -108,15 +133,29 @@
 {% block content %}
 <div class="project-header">
 	<div class="d-flex justify-content-between align-items-center">
-		<h1>{{ data.project_name }}</h1>
+		<h1>
+			<span class="editable-field" id="projectNameField" data-field="project_name"
+				data-value="{{ data.project_name }}">
+				{{ data.project_name }}
+				<i class="edit-icon">✏️</i>
+			</span>
+		</h1>
 		<div>
 			<button class="btn btn-primary" id="saveProjectBtn">Save</button>
 			<button class="btn btn-success" id="runProjectBtn">Run</button>
 		</div>
 	</div>
-	{% if data.project_comment %}
-	<p class="text-muted">{{ data.project_comment }}</p>
-	{% endif %}
+	<div>
+		<span class="editable-field" id="projectCommentField" data-field="project_comment"
+			data-value="{{ data.project_comment }}">
+			{% if data.project_comment %}
+			<p class="text-muted">{{ data.project_comment }}</p>
+			{% else %}
+			<p class="text-muted fst-italic">Add a project comment...</p>
+			{% endif %}
+			<i class="edit-icon">✏️</i>
+		</span>
+	</div>
 
 	<div class="row mt-3">
 		<div class="col-md-3">
@@ -289,6 +328,107 @@
 		document.getElementById('settingsBtn').addEventListener('click', function () {
 			alert('Additional settings will be available in a future version.');
 		});
+
+		// EDITABLE FIELDS FUNCTIONALITY
+		const editableFields = document.querySelectorAll('.editable-field');
+
+		// Helper function to make a field editable
+		function makeEditable(field) {
+			const fieldName = field.getAttribute('data-field');
+			const currentValue = field.getAttribute('data-value');
+			const isProjectName = fieldName === 'project_name';
+
+			// Store original content to restore if needed
+			const originalContent = field.innerHTML;
+
+			// Create input element
+			const input = document.createElement(isProjectName ? 'input' : 'textarea');
+			input.className = 'editable-input';
+			input.value = currentValue || '';
+
+			if (isProjectName) {
+				input.style.fontSize = '2rem'; // Match h1 size
+			} else {
+				input.rows = 2;
+				input.style.width = '100%';
+			}
+
+			// Replace field content with input
+			field.innerHTML = '';
+			field.appendChild(input);
+
+			// Focus the input
+			input.focus();
+
+			// Handle input blur (click outside)
+			input.addEventListener('blur', function () {
+				saveFieldValue(field, input.value, fieldName);
+			});
+
+			// Handle Enter key press
+			input.addEventListener('keydown', function (e) {
+				if (e.key === 'Enter' && !e.shiftKey) {
+					e.preventDefault();
+					saveFieldValue(field, input.value, fieldName);
+				} else if (e.key === 'Escape') {
+					// Restore original content on Escape
+					field.innerHTML = originalContent;
+				}
+			});
+		}
+
+		// Helper function to save the field value
+		function saveFieldValue(field, value, fieldName) {
+			// Get the current project
+			const projectName = "{{ session.get('current_project') }}";
+
+			// Send update to backend
+			fetch(`/api/projects/update/${projectName}`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					field: fieldName,
+					value: value
+				})
+			})
+				.then(response => response.json())
+				.then(data => {
+					if (data.success) {
+						// Update the field display
+						field.setAttribute('data-value', value);
+
+						if (fieldName === 'project_name') {
+							field.innerHTML = `${value}<i class="edit-icon">✏️</i>`;
+							// Update page title
+							document.title = `${value} - SuperMega++`;
+						} else {
+							// For project comment
+							if (value) {
+								field.innerHTML = `<p class="text-muted">${value}</p><i class="edit-icon">✏️</i>`;
+							} else {
+								field.innerHTML = `<p class="text-muted fst-italic">Add a project comment...</p><i class="edit-icon">✏️</i>`;
+							}
+						}
+					} else {
+						// Show error in console
+						console.error("Error updating field:", data.message);
+						// Could add an alert here if needed
+					}
+				})
+				.catch(error => {
+					console.error('Error:', error);
+				});
+		}
+
+		// Add click event to all editable fields
+		editableFields.forEach(field => {
+			field.addEventListener('click', function () {
+				makeEditable(this);
+			});
+		});
 	});
 </script>
+
 {% endblock %}

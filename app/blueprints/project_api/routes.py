@@ -108,3 +108,36 @@ def download_project(project_name):
     except Exception as e:
         flash(f"Error creating zip archive: {str(e)}", "danger")
         return redirect(url_for('main.home'))
+
+# NEW ROUTE: Update project fields
+@project_api.route('/update/<project_name>', methods=['POST'])
+def update_project_field(project_name):
+    """Update a single field in the project data."""
+    try:
+        # Get the JSON data from the request
+        data = request.get_json()
+
+        if not data or 'field' not in data or 'value' not in data:
+            return jsonify({'success': False, 'message': 'Invalid request data'}), 400
+
+        field = data['field']
+        value = data['value']
+
+        # Only allow updating specific fields
+        if field not in ['project_name', 'project_comment']:
+            return jsonify({'success': False, 'message': 'Invalid field name'}), 400
+
+        # Update the project
+        updated_data = ProjectService.update_project_field(project_name, field, value)
+
+        # Update the session data
+        if 'project_data' in session:
+            session['project_data'] = updated_data
+
+        # Set flash message for the next page load
+        flash(f"Project {field.replace('_', ' ')} updated successfully.", "success")
+
+        return jsonify({'success': True, 'data': updated_data})
+
+    except Exception as e:
+        return jsonify({'success': False, 'message': str(e)}), 500

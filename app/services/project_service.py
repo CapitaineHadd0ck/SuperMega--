@@ -109,6 +109,40 @@ class ProjectService:
         return project_data
 
     @staticmethod
+    def update_project_field(project_name, field_name, field_value):
+        """Update a specific field in the project.json file.
+
+        Args:
+            project_name: Name of the project to update
+            field_name: Name of the field to update
+            field_value: New value for the field
+
+        Returns:
+            Updated project data dictionary
+        """
+        project_dir = ProjectService.get_project_dir(project_name)
+        project_json_path = ProjectService.get_project_json_path(project_dir)
+
+        if not os.path.exists(project_json_path):
+            raise FileNotFoundError(f"Project JSON file not found for '{project_name}'")
+
+        # Read the current project data
+        with open(project_json_path, 'rt', encoding='utf-8') as file:
+            try:
+                project_data = json.load(file)
+            except json.JSONDecodeError:
+                raise ValueError("Invalid JSON file.")
+
+        # Update the specified field
+        project_data[field_name] = field_value
+
+        # Write back the updated project data
+        with open(project_json_path, 'wt', encoding='utf-8') as file:
+            json.dump(project_data, file, indent=2)
+
+        return project_data
+
+    @staticmethod
     def delete_project(project_name):
         """Delete a project directory and all its contents."""
         project_dir = ProjectService.get_project_dir(project_name)
