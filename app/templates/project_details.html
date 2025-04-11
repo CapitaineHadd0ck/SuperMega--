@@ -170,7 +170,8 @@
 			</div>
 			<div class="card-body p-0">
 				<div class="code-container" id="codeContainer">
-					<pre><code class="code-content language-c" id="fileContent">{{ file_contents.get(default_file, '') }}</code></pre>
+					<pre
+						id="codeWrapper"><code class="code-content" id="fileContent">{{ file_contents.get(default_file, '') }}</code></pre>
 				</div>
 			</div>
 		</div>
@@ -194,13 +195,22 @@
 
 <script>
 	document.addEventListener('DOMContentLoaded', function () {
-		const fileContent = document.getElementById('fileContent');
-		const currentFileName = document.getElementById('currentFileName');
 		const codeContainer = document.getElementById('codeContainer');
 		const fileItems = document.querySelectorAll('.file-list-item');
 		const fileContentsData = document.getElementById('fileContentsData');
 		const lightTheme = document.getElementById('code-theme-light');
 		const darkTheme = document.getElementById('code-theme-dark');
+		const currentFileName = document.getElementById('currentFileName');
+		const codeWrapper = document.getElementById('codeWrapper');
+		const fileContent = document.getElementById('fileContent');
+
+		// Set initial language class based on default file
+		const defaultFileName = currentFileName.textContent.trim();
+		const defaultLanguage = getLanguageForFile(defaultFileName);
+		fileContent.className = `code-content language-${defaultLanguage}`;
+
+		// Initialize syntax highlighting for default file
+		hljs.highlightElement(fileContent);
 
 		// Get content for a specific file from the hidden data
 		function getFileContent(filename) {
@@ -221,9 +231,6 @@
 			}
 		}
 
-		// Initialize syntax highlighting
-		hljs.highlightElement(fileContent);
-
 		// Dark mode handling
 		let isDarkMode = false;
 
@@ -243,8 +250,13 @@
 				darkTheme.disabled = true;
 			}
 
-			// Re-highlight code with new theme
-			hljs.highlightElement(fileContent);
+			// Get current code element and re-highlight
+			const codeElement = document.getElementById('fileContent');
+			if (codeElement) {
+				// Remove the highlighted flag
+				delete codeElement.dataset.highlighted;
+				hljs.highlightElement(codeElement);
+			}
 		});
 
 		// File click handling
@@ -264,14 +276,28 @@
 
 				// Get content from our hidden div
 				const content = getFileContent(filename);
-				fileContent.textContent = content;
 
-				// Update language for syntax highlighting
+				// Get language for the file
 				const language = getLanguageForFile(filename);
-				fileContent.className = `code-content language-${language}`;
 
-				// Re-highlight the code
-				hljs.highlightElement(fileContent);
+				// Create completely new pre and code elements
+				const newPre = document.createElement('pre');
+				newPre.id = 'codeWrapper';
+
+				const newCode = document.createElement('code');
+				newCode.id = 'fileContent';
+				newCode.className = `code-content language-${language}`;
+				newCode.textContent = content;
+
+				// Add the new code to pre
+				newPre.appendChild(newCode);
+
+				// Clear the code container and add our new elements
+				codeContainer.innerHTML = '';
+				codeContainer.appendChild(newPre);
+
+				// Apply syntax highlighting to the new element
+				hljs.highlightElement(newCode);
 			});
 		});
 
