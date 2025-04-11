@@ -73,29 +73,66 @@
 		border-color: #444;
 	}
 
-	/* Editable fields styling */
+	/* Improved editable fields styling */
 	.editable-field {
 		display: inline-block;
 		position: relative;
 		cursor: pointer;
+		border: 1px solid transparent;
+		padding: 5px 10px;
+		border-radius: 4px;
+		transition: all 0.2s ease;
+	}
+
+	.editable-field:hover {
+		border-color: #ced4da;
+		background-color: #f8f9fa;
+	}
+
+	.editable-field .edit-icon {
+		opacity: 0;
+		margin-left: 8px;
+		color: #6c757d;
+		transition: opacity 0.2s ease;
 	}
 
 	.editable-field:hover .edit-icon {
-		visibility: visible;
+		opacity: 1;
 	}
 
-	.edit-icon {
-		visibility: hidden;
-		margin-left: 8px;
-		color: #6c757d;
-		cursor: pointer;
+	.editable-field.editing {
+		border-color: #80bdff;
+		background-color: #fff;
+		box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 	}
 
 	.editable-input {
 		width: 100%;
-		padding: 5px;
-		border: 1px solid #ced4da;
-		border-radius: 4px;
+		padding: 5px 8px;
+		border: none;
+		background: transparent;
+		font-family: inherit;
+		font-size: inherit;
+		color: inherit;
+		outline: none;
+	}
+
+	/* Project name specific style */
+	#projectNameField {
+		font-size: 2rem;
+		font-weight: bold;
+		margin-bottom: 0;
+		line-height: 1.2;
+	}
+
+	/* Project comment specific style */
+	#projectCommentField {
+		width: 100%;
+		color: #6c757d;
+	}
+
+	#projectCommentField.empty {
+		font-style: italic;
 	}
 </style>
 {% endblock %}
@@ -103,28 +140,28 @@
 {% block content %}
 <div class="project-header">
 	<div class="d-flex justify-content-between align-items-center">
-		<h1>
-			<span class="editable-field" id="projectNameField" data-field="project_name"
+		<h1 class="mb-0">
+			<div class="editable-field" id="projectNameField" data-field="project_name"
 				data-value="{{ data.project_name }}">
 				{{ data.project_name }}
 				<i class="bi bi-pencil-square edit-icon"></i>
-			</span>
+			</div>
 		</h1>
 		<div>
 			<button class="btn btn-primary" id="saveProjectBtn">Save</button>
 			<button class="btn btn-success" id="runProjectBtn">Run</button>
 		</div>
 	</div>
-	<div>
-		<span class="editable-field" id="projectCommentField" data-field="project_comment"
-			data-value="{{ data.project_comment }}">
+	<div class="mt-2">
+		<div class="editable-field {% if not data.project_comment %}empty{% endif %}" id="projectCommentField"
+			data-field="project_comment" data-value="{{ data.project_comment }}">
 			{% if data.project_comment %}
-			<p class="text-muted">{{ data.project_comment }}</p>
+			{{ data.project_comment }}
 			{% else %}
-			<p class="text-muted fst-italic">Add a project comment...</p>
+			Add a project comment...
 			{% endif %}
 			<i class="bi bi-pencil-square edit-icon"></i>
-		</span>
+		</div>
 	</div>
 
 	<div class="row mt-3">
@@ -334,11 +371,16 @@
 			alert('Additional settings will be available in a future version.');
 		});
 
-		// EDITABLE FIELDS FUNCTIONALITY
+		// IMPROVED EDITABLE FIELDS FUNCTIONALITY
 		const editableFields = document.querySelectorAll('.editable-field');
 
 		// Helper function to make a field editable
 		function makeEditable(field) {
+			// Skip if already in edit mode
+			if (field.classList.contains('editing')) {
+				return;
+			}
+
 			const fieldName = field.getAttribute('data-field');
 			const currentValue = field.getAttribute('data-value');
 			const isProjectName = fieldName === 'project_name';
@@ -346,17 +388,14 @@
 			// Store original content to restore if needed
 			const originalContent = field.innerHTML;
 
+			// Add editing class
+			field.classList.add('editing');
+
 			// Create input element
-			const input = document.createElement(isProjectName ? 'input' : 'textarea');
+			const input = document.createElement('input');
+			input.type = 'text';
 			input.className = 'editable-input';
 			input.value = currentValue || '';
-
-			if (isProjectName) {
-				input.style.fontSize = '2rem'; // Match h1 size
-			} else {
-				input.rows = 2;
-				input.style.width = '100%';
-			}
 
 			// Replace field content with input
 			field.innerHTML = '';
@@ -365,19 +404,44 @@
 			// Focus the input
 			input.focus();
 
-			// Handle input blur (click outside)
-			input.addEventListener('blur', function () {
-				saveFieldValue(field, input.value, fieldName);
-			});
+			// Function to save changes
+			function saveChanges() {
+				const newValue = input.value.trim();
+				field.classList.remove('editing');
 
-			// Handle Enter key press
+				// Update data-value attribute
+				field.setAttribute('data-value', newValue);
+
+				// Update the display
+				if (fieldName === 'project_comment' && !newValue) {
+					field.innerHTML = 'Add a project comment... <i class="bi bi-pencil-square edit-icon"></i>';
+					field.classList.add('empty');
+				} else {
+					field.innerHTML = newValue + ' <i class="bi bi-pencil-square edit-icon"></i>';
+					field.classList.remove('empty');
+				}
+
+				// Save to server
+				saveFieldValue(field, newValue, fieldName);
+			}
+
+			// Function to cancel changes
+			function cancelChanges() {
+				field.classList.remove('editing');
+				field.innerHTML = originalContent;
+			}
+
+			// Handle input blur (click outside)
+			input.addEventListener('blur', saveChanges);
+
+			// Handle Enter key press or Escape to cancel
 			input.addEventListener('keydown', function (e) {
-				if (e.key === 'Enter' && !e.shiftKey) {
+				if (e.key === 'Enter') {
 					e.preventDefault();
-					saveFieldValue(field, input.value, fieldName);
+					saveChanges();
 				} else if (e.key === 'Escape') {
-					// Restore original content on Escape
-					field.innerHTML = originalContent;
+					e.preventDefault();
+					cancelChanges();
 				}
 			});
 		}
@@ -413,7 +477,7 @@
 
 		// Add click event to all editable fields
 		editableFields.forEach(field => {
-			field.addEventListener('click', function () {
+			field.addEventListener('click', function (e) {
 				makeEditable(this);
 			});
 		});
