@@ -5,6 +5,9 @@
 {% block extra_css %}
 <!-- Add Bootstrap Icons CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+<!-- Self-hosted highlight.js styles -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/default.min.css') }}" id="code-theme-light">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/vs2015.min.css') }}" id="code-theme-dark" disabled>
 <style>
 	.project-header {
 		background-color: #f8f9fa;
@@ -48,6 +51,12 @@
 		margin: 0;
 	}
 
+	/* Dark mode for code container only */
+	.dark-mode .code-container {
+		background-color: #1e1e1e;
+		border-color: #444;
+	}
+
 	/* Editable fields styling */
 	.editable-field {
 		display: inline-block;
@@ -72,64 +81,7 @@
 		border: 1px solid #ced4da;
 		border-radius: 4px;
 	}
-
-	/* Syntax highlighting styles for light mode */
-	.hljs-keyword {
-		color: #0000ff;
-	}
-
-	.hljs-comment {
-		color: #008000;
-	}
-
-	.hljs-string {
-		color: #a31515;
-	}
-
-	.hljs-number {
-		color: #098658;
-	}
-
-	.hljs-function {
-		color: #795E26;
-	}
-
-	.hljs-preprocessor {
-		color: #800080;
-	}
-
-	/* Syntax highlighting styles for dark mode */
-	.dark-mode .code-container {
-		background-color: #1e1e1e;
-		color: #d4d4d4;
-	}
-
-	.dark-mode .hljs-keyword {
-		color: #569CD6;
-	}
-
-	.dark-mode .hljs-comment {
-		color: #6A9955;
-	}
-
-	.dark-mode .hljs-string {
-		color: #CE9178;
-	}
-
-	.dark-mode .hljs-number {
-		color: #B5CEA8;
-	}
-
-	.dark-mode .hljs-function {
-		color: #DCDCAA;
-	}
-
-	.dark-mode .hljs-preprocessor {
-		color: #C586C0;
-	}
 </style>
-<!-- Highlight.js for syntax highlighting -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
 {% endblock %}
 
 {% block content %}
@@ -234,10 +186,11 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- Highlight.js for syntax highlighting -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/c.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/languages/json.min.js"></script>
+<!-- Self-hosted highlight.js core and language scripts -->
+<script src="{{ url_for('static', filename='js/highlight.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/c.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/json.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/x86asm.min.js') }}"></script>
 
 <script>
 	document.addEventListener('DOMContentLoaded', function () {
@@ -246,6 +199,8 @@
 		const codeContainer = document.getElementById('codeContainer');
 		const fileItems = document.querySelectorAll('.file-list-item');
 		const fileContentsData = document.getElementById('fileContentsData');
+		const lightTheme = document.getElementById('code-theme-light');
+		const darkTheme = document.getElementById('code-theme-dark');
 
 		// Get content for a specific file from the hidden data
 		function getFileContent(filename) {
@@ -259,6 +214,8 @@
 				return 'json';
 			} else if (filename.endsWith('.c') || filename.endsWith('.h')) {
 				return 'c';
+			} else if (filename.endsWith('.asm') || filename.endsWith('.s')) {
+				return 'x86asm';
 			} else {
 				return 'plaintext';
 			}
@@ -275,13 +232,15 @@
 			isDarkMode = !isDarkMode;
 
 			if (isDarkMode) {
-				document.body.classList.add('dark-mode');
-				codeContainer.classList.add('bg-dark');
+				codeContainer.classList.add('dark-mode');
 				this.textContent = 'Light Mode';
+				lightTheme.disabled = true;
+				darkTheme.disabled = false;
 			} else {
-				document.body.classList.remove('dark-mode');
-				codeContainer.classList.remove('bg-dark');
+				codeContainer.classList.remove('dark-mode');
 				this.textContent = 'Dark Mode';
+				lightTheme.disabled = false;
+				darkTheme.disabled = true;
 			}
 
 			// Re-highlight code with new theme
